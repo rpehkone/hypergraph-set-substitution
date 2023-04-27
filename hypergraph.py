@@ -42,8 +42,9 @@ def _generate_substitution_function(outvars, invars):
 	print(code)
 	exec(code, globals())
 
-def parse_rule(rule_str):
-	variables = re.findall(r"\b\w+\b", rule_str)
+rule  = ""
+def parse_rule():
+	variables = re.findall(r"\b\w+\b", rule)
 	input_vars, output_vars = variables[:2], variables[2:]
 	_generate_substitution_function(output_vars, input_vars)
 
@@ -80,6 +81,8 @@ def on_key_press(event):
 plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 
 def evolve_graph(initial_graph, max_steps):
+	parse_rule()
+
 	global current_step
 	global auto_step
 	start_time = time.time()
@@ -98,7 +101,7 @@ def evolve_graph(initial_graph, max_steps):
 			prev_solution = current_step
 			for _ in range(current_step):
 				graph = apply_rule(graph)
-		plt.title(f"Steps: {current_step}")
+		plt.title(f"{rule}\nSteps: {current_step}")
 		plot_graph(graph)
 
 # https://www.wolframphysics.org/technical-introduction/basic-form-of-models/
@@ -107,30 +110,30 @@ def evolve_graph(initial_graph, max_steps):
 # plot_graph(graph)
 
 # 2.2 First Example of a Rule
-# parse_rule("{{x, y}} -> {{x, y}, {y, z}}")
+# rule = "{{x, y}} -> {{x, y}, {y, z}}"
 # evolve_graph([(1, 2)], 4)
 
 # 2.3 A Slightly Different Rule
-# parse_rule("{{x, y}} -> {{z, y}, {y, x}}")
+# rule = "{{x, y}} -> {{z, y}, {y, x}}"
 # evolve_graph([(1, 2)], 4)
 
 # 2.4 Self-Loops
-# parse_rule("{{x, y}} -> {{y, z}, {z, x}}")
+# rule = "{{x, y}} -> {{y, z}, {z, x}}"
 # evolve_graph([(1, 1)], 6)
 
 # 2.4.2 Binary tree
-parse_rule("{{x, x}} -> {{y, y}, {y, y}, {x, y}}")
-evolve_graph([(1, 1)], 6)
+# rule = "{{x, x}} -> {{y, y}, {y, y}, {x, y}}"
+# evolve_graph([(1, 1)], 6)
 
 # 2.5 Multiedges
-# parse_rule("{{x, y}} -> {{x, z}, {x, z}, {y, z}}")
+# rule = "{{x, y}} -> {{x, z}, {x, z}, {y, z}}"
 # evolve_graph([(1, 1)], 6)
 
 # 2.5.2 multiedge after one step, but then destroys it
-# parse_rule("{{x, y}} -> {{x, z}, {z, w}, {y, z}}")
+# rule = "{{x, y}} -> {{x, z}, {z, w}, {y, z}}"
 # evolve_graph([(1, 1)], 4)
 
-#TODO
+#TODO:
 # 2.7 More Than One Relation
 # parse_rule({{x, y}, {x, z}} -> {{x, y}, {x, w}, {y, w}, {z, w}})
 # evolve_graph([(1, 2), (1, 3)], 6)
