@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import scipy #plot compiler
+import time
 import re
 
 def plot_graph(edges):
@@ -13,7 +14,9 @@ def plot_graph(edges):
 	nx.draw_networkx_nodes(G, pos, node_color='lightblue', node_size=500, node_shape='o', alpha=0.8)
 	nx.draw_networkx_labels(G, pos, labels={node: node for node in G.nodes()}, font_size=10)
 	nx.draw_networkx_edges(G, pos, edgelist=G.edges(), arrows=True, arrowstyle="-|>", arrowsize=20, width=1.0, edge_color='black', alpha=1)
-	plt.show()
+	plt.draw()
+	plt.pause(0.1)
+	plt.clf()
 
 def _generate_substitution_function(outvars, invars):
 	# code = f"""def substitute({', '.join(input_vars)}):
@@ -25,7 +28,6 @@ def _generate_substitution_function(outvars, invars):
 		for i, v in enumerate(outvars):
 			if v == "y":
 				outvars[i] = 'z'
-		#makes more sense
 		# outvars[1] = chr(ord(outvars[1]) + 1)
 		# parse_rule("{{x, x}} -> {{z, z}, {z, z}, {x, z}}")
 
@@ -54,14 +56,50 @@ def apply_rule(graph):
 		max_value = max(max_res, max_value)
 	return result
 
-def evolve_graph(graph, steps, plot):
-	for _ in range(steps):
-		graph = apply_rule(graph)
-		if (len(graph) <= 15):
-			print(graph)
-		if plot:
-			plot_graph(graph)
-	return graph
+def on_window_close(event):
+	exit(0)
+fig, ax = plt.subplots()
+fig.canvas.mpl_connect('close_event', on_window_close)
+
+auto_step = True
+current_step = 0
+def on_key_press(event):
+	global current_step
+	global auto_step
+
+	if event.key == "right":
+		current_step += 1
+		auto_step = False
+	elif event.key == "left":
+		current_step -= 1
+		auto_step = False
+	elif event.key == "escape":
+		exit(0)
+	if current_step < 0:
+		current_step = 0
+plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
+
+def evolve_graph(initial_graph, max_steps):
+	global current_step
+	global auto_step
+	start_time = time.time()
+	prev_solution = -1
+	graph = []
+
+	while True:
+		if auto_step:
+			if time.time() - start_time >= 2:
+				start_time = time.time()
+				current_step += 1
+				if current_step == max_steps:
+					auto_step = False
+		if prev_solution != current_step:
+			graph = initial_graph
+			prev_solution = current_step
+			for _ in range(current_step):
+				graph = apply_rule(graph)
+		plt.title(f"Steps: {current_step}")
+		plot_graph(graph)
 
 # https://www.wolframphysics.org/technical-introduction/basic-form-of-models/
 # 2.1 Basic structure
@@ -70,27 +108,33 @@ def evolve_graph(graph, steps, plot):
 
 # 2.2 First Example of a Rule
 # parse_rule("{{x, y}} -> {{x, y}, {y, z}}")
-# evolve_graph([(1, 2)], 4, True)
+# evolve_graph([(1, 2)], 4)
 
 # 2.3 A Slightly Different Rule
 # parse_rule("{{x, y}} -> {{z, y}, {y, x}}")
-# evolve_graph([(1, 2)], 4, True)
+# evolve_graph([(1, 2)], 4)
 
 # 2.4 Self-Loops
 # parse_rule("{{x, y}} -> {{y, z}, {z, x}}")
-# evolve_graph([(1, 1)], 6, True)
+# evolve_graph([(1, 1)], 6)
 
 # 2.4.2 Binary tree
-# parse_rule("{{x, x}} -> {{y, y}, {y, y}, {x, y}}")
-# evolve_graph([(1, 1)], 6, True)
+parse_rule("{{x, x}} -> {{y, y}, {y, y}, {x, y}}")
+evolve_graph([(1, 1)], 6)
 
 # 2.5 Multiedges
 # parse_rule("{{x, y}} -> {{x, z}, {x, z}, {y, z}}")
-# evolve_graph([(1, 1)], 6, True)
+# evolve_graph([(1, 1)], 6)
 
 # 2.5.2 multiedge after one step, but then destroys it
 # parse_rule("{{x, y}} -> {{x, z}, {z, w}, {y, z}}")
-# evolve_graph([(1, 1)], 4, True)
+# evolve_graph([(1, 1)], 4)
+
+#TODO
+# 2.7 More Than One Relation
+# parse_rule({{x, y}, {x, z}} -> {{x, y}, {x, w}, {y, w}, {z, w}})
+# evolve_graph([(1, 2), (1, 3)], 6)
+
 
 
 
