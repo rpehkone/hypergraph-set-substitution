@@ -135,17 +135,87 @@ def evolve_graph(initial_graph, max_steps):
 # rule = "{{x, y}} -> {{x, z}, {x, z}, {y, z}}"
 # evolve_graph([(1, 1)], 6)
 
-# 2.5.2 multiedge after one step, but then destroys it
+# 2.5.2 Multiedge after one step, but then destroys it
 # rule = "{{x, y}} -> {{x, z}, {z, w}, {y, z}}"
 # evolve_graph([(1, 1)], 4)
 
-#TODO:
+#TODO: ---------------------------------------------
+
+# 2.6 Ternary self-loop
+# rule = "{{x, y, z}} -> {{x, y, w}, {y, w, z}}"
+# evolve_graph([(1, 1, 1)], 4)
+
 # 2.7 More Than One Relation
-# parse_rule({{x, y}, {x, z}} -> {{x, y}, {x, w}, {y, w}, {z, w}})
+# rule = "{{x, y}, {x, z}} -> {{x, y}, {x, w}, {y, w}, {z, w}}"
 # evolve_graph([(1, 2), (1, 3)], 6)
 
+# 2.8 Termination
+# rule = "{{x, y, z}, {u, x}} -> {{x, u, v}, {z, y}, {z, u}}"
+# evolve_graph([(0, 0, 0), (0, 0)], 6)
+
+# 2.9 Connectedness
+# rule = "{{x, y}} -> {{x, x}, {z, x}}"
+# evolve_graph([(1, 2)], 4)
 
 
 
-# 3.6
-#TODO: convert input {x, x, y} to {x, x}, {x, y}
+# 3.5 Rules Depending on a Single Binary Relation
+# rule = "{{x, y}} -> {{x, z}, {y, z}, {z, z}}"
+# evolve_graph([{{1, 1}}, 5
+
+# rule = "{{x, y}} -> {{x, y}, {y, z}, {z, x}}"
+# evolve_graph([{{1, 2}}, 5
+
+# rule = "{{1, 2}} -> {{3, 4}, {4, 3}, {3, 1}, {3, 2}}"
+# evolve_graph([{{0, 0}}, 5
+
+# rule = "{{1, 2}} -> {{2, 3}, {2, 3}, {3, 1}, {3, 1}}"
+# evolve_graph([{{0, 0}}, 5
+
+
+
+# 3.6 Rules Depending on One Ternary Relation
+# rule = "{x, x, y} to {x, x}, {x, y}"
+# evolve_graph([[0, 0, 0]], 6)
+
+# rule = "{{x, x, y}} -> {{y, y, y}, {x, y, z}}"
+# evolve_graph([[0, 0, 0]], 6)
+
+# rule = "{{x, y, z}} -> {{x, u, v}, {z, v, w}, {y, w, u}}"
+# evolve_graph([[1, 2, 3]], 5)
+
+
+
+# 3.7 Rules Depending on More Than One Relation: The 22 -> 32 Case
+# rule = "{{x, y}, {x, z}} -> {{x, w}, {y, w}, {z, w}}"
+# evolve_graph([[0, 0], [0, 0]], 30)
+
+
+
+# 3.8 Rules with Signature 22 -> 42
+# rule = "{{x, y}, {x, z}} -> {{y, z}, {y, w}, {z, w}, {w, x}}"
+# evolve_graph([[0, 0], [0, 0]], 10)
+
+# rule = "{{x, y}, {y, z}} -> {{x, y}, {y, x}, {w, x}, {w, z}}"
+# evolve_graph([[0, 0], [0, 0]], 10)
+
+# rule = "{{x, y}, {y, z}} -> {{w, y}, {y, z}, {z, w}, {x, w}}"
+# evolve_graph([[0, 0], [0, 0]], 10)
+
+
+
+# 3.13 Multiple Transformation Rules
+# {{{x, x}} -> {{y, x}, {x, z}}, {{x, y}, {y, z}} -> {{x, x}}}, {{0, 0}}, 7
+
+# {{{1, 1}} -> {{2, 1}, {2, 1}, {3, 1}}, {{1, 2}, {3, 2}} -> {{2, 2}}}, {{1, 1}}, 20
+
+
+
+# 3.14 Rules Involving Disconnected Pieces
+# {{x, y}} -> {{y, z}, {y, z}}, {{0, 0}}, 5
+# {{x, y}} -> {{x, x}, {y, z}}, {{0, 0}}, 5
+
+#  {{x}, {y}} -> {{x, y}},
+# initial = [[1]]
+# for i in range(10):
+# 	initial.append([i])
