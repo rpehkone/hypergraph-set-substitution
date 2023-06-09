@@ -21,7 +21,7 @@ def plot_graph(edges):
 		nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, edge_color='black', alpha=1)
 	plt.draw()
 
-def _generate_substitution_function(outvars, invars):
+def _generate_node_substitution_function(outvars, invars):
 	# code = f"""def substitute({', '.join(input_vars)}):
 	code = "def substitute(x, y, z, w):\n"
 
@@ -45,43 +45,24 @@ def _generate_substitution_function(outvars, invars):
 	print(code)
 	exec(code, globals())
 
+def _generate_graph_substitution_function():
+	code = "def apply_rule(graph):\n" +\
+	"	result = []\n" +\
+	"	max_value = max(max(p) for p in graph)\n" +\
+	"	for pair in graph:\n" +\
+	"		result += substitute(pair[0], pair[1], max_value + 1, max_value + 2)\n" +\
+	"		max_res = max(max(p) for p in result)\n" +\
+	"		max_value = max(max_res, max_value)\n" +\
+	"	return result"
+	print(code)
+	exec(code, globals())
+
 rule  = ""
 def parse_rule():
 	variables = re.findall(r"\b\w+\b", rule)
 	input_vars, output_vars = variables[:2], variables[2:]
-	_generate_substitution_function(output_vars, input_vars)
-
-def apply_rule(graph):
-	result = []
-	max_value = max(max(p) for p in graph)
-	for pair in graph:
-		result += substitute(pair[0], pair[1], max_value + 1, max_value + 2)
-		max_res = max(max(p) for p in result)
-		max_value = max(max_res, max_value)
-	return result
-
-def on_window_close(event):
-	exit(0)
-fig, ax = plt.subplots()
-fig.canvas.mpl_connect('close_event', on_window_close)
-
-auto_step = True
-current_step = 0
-def on_key_press(event):
-	global current_step
-	global auto_step
-
-	if event.key == "right":
-		current_step += 1
-		auto_step = False
-	elif event.key == "left":
-		current_step -= 1
-		auto_step = False
-	elif event.key == "escape":
-		exit(0)
-	if current_step < 0:
-		current_step = 0
-plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
+	_generate_node_substitution_function(output_vars, input_vars)
+	_generate_graph_substitution_function()
 
 def evolve_graph(initial_graph, max_steps):
 	parse_rule()
@@ -108,6 +89,33 @@ def evolve_graph(initial_graph, max_steps):
 			plot_graph(graph)
 		plt.title(f"{rule}\nSteps: {current_step}")
 		plt.pause(0.1)
+
+
+# ui functions
+def on_window_close(event):
+	exit(0)
+fig, ax = plt.subplots()
+fig.canvas.mpl_connect('close_event', on_window_close)
+
+auto_step = True
+current_step = 0
+def on_key_press(event):
+	global current_step
+	global auto_step
+
+	if event.key == "right":
+		current_step += 1
+		auto_step = False
+	elif event.key == "left":
+		current_step -= 1
+		auto_step = False
+	elif event.key == "escape":
+		exit(0)
+	if current_step < 0:
+		current_step = 0
+plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
+
+
 
 # https://www.wolframphysics.org/technical-introduction/basic-form-of-models/
 # 2.1 Basic structure
