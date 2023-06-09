@@ -5,8 +5,7 @@ import re
 
 def plot_graph(edges):
 	G = nx.Graph()
-	for edge in edges:
-		G.add_edges_from([tuple(edge)])
+	G.add_edges_from(edges)
 	if len(edges) < 40:
 		# wolfram uses a proprietary force-directed graph layout algorithm
 		# pos = nx.spectral_layout(G)
@@ -27,7 +26,7 @@ def _generate_node_substitution_function(outvars, invars):
 
 	if invars[0] == invars[1]:
 		code +=	"	if x != y:\n"+\
-				"		return [(x, y)]\n"
+				"		return [[x, y]]\n"
 		for i, v in enumerate(outvars):
 			if v == "y":
 				outvars[i] = 'z'
@@ -37,20 +36,20 @@ def _generate_node_substitution_function(outvars, invars):
 	code +=	"	return ["
 	i = 0
 	while i < len(outvars):
-			code += "(" + outvars[i] + ", " + outvars[i + 1] + ")"
+			code += "[" + outvars[i] + ", " + outvars[i + 1] + "]"
 			i += 2
 			if i < len(outvars):
 				code += ", "
 	code += "]"
-	print(code)
+	print(code + "\n")
 	exec(code, globals())
 
 def _generate_graph_substitution_function():
 	code = "def apply_rule(graph):\n" +\
 	"	result = []\n" +\
 	"	max_value = max(max(p) for p in graph)\n" +\
-	"	for pair in graph:\n" +\
-	"		result += substitute(pair[0], pair[1], max_value + 1, max_value + 2)\n" +\
+	"	for relation in graph:\n" +\
+	"		result += substitute(relation[0], relation[1], max_value + 1, max_value + 2)\n" +\
 	"		max_res = max(max(p) for p in result)\n" +\
 	"		max_value = max(max_res, max_value)\n" +\
 	"	return result"
@@ -119,66 +118,66 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 
 # https://www.wolframphysics.org/technical-introduction/basic-form-of-models/
 # 2.1 Basic structure
-# graph = [(1, 2), (1, 3), (2, 3), (4, 1)]
+# graph = [[1, 2], [1, 3], [2, 3], [4, 1]]
 # plot_graph(graph)
 # plt.show()
 
 # 2.2 First Example of a Rule
 # rule = "{{x, y}} -> {{x, y}, {y, z}}"
-# evolve_graph([(1, 2)], 4)
+# evolve_graph([[1, 2]], 4)
 
 # 2.3 A Slightly Different Rule
 # rule = "{{x, y}} -> {{z, y}, {y, x}}"
-# evolve_graph([(1, 2)], 5)
+# evolve_graph([[1, 2]], 5)
 
 # 2.4 Self-Loops
 # rule = "{{x, y}} -> {{y, z}, {z, x}}"
-# evolve_graph([(1, 1)], 6)
+# evolve_graph([[1, 1]], 6)
 
 # 2.4.2 Binary tree
 # rule = "{{x, x}} -> {{y, y}, {y, y}, {x, y}}"
-# evolve_graph([(1, 1)], 6)
+# evolve_graph([[1, 1]], 6)
 
 # 2.5 Multiedges
 # rule = "{{x, y}} -> {{x, z}, {x, z}, {y, z}}"
-# evolve_graph([(1, 1)], 6)
+# evolve_graph([[1, 1]], 6)
 
 # 2.5.2 Multiedge after one step, but then destroys it
 # rule = "{{x, y}} -> {{x, z}, {z, w}, {y, z}}"
-# evolve_graph([(1, 1)], 4)
+# evolve_graph([[1, 1]], 4)
 
 #TODO: ---------------------------------------------
 
 # 2.6 Ternary self-loop
 # rule = "{{x, y, z}} -> {{x, y, w}, {y, w, z}}"
-# evolve_graph([(1, 1, 1)], 4)
+# evolve_graph([[1, 1, 1]], 4)
 
 # 2.7 More Than One Relation
 # rule = "{{x, y}, {x, z}} -> {{x, y}, {x, w}, {y, w}, {z, w}}"
-# evolve_graph([(1, 2), (1, 3)], 6)
+# evolve_graph([[1, 2], [1, 3]], 6)
 
 # 2.8 Termination
 # rule = "{{x, y, z}, {u, x}} -> {{x, u, v}, {z, y}, {z, u}}"
-# evolve_graph([(0, 0, 0), (0, 0)], 6)
+# evolve_graph([[0, 0, 0], [0, 0]], 6)
 
 # 2.9 Connectedness
 # rule = "{{x, y}} -> {{x, x}, {z, x}}"
-# evolve_graph([(1, 2)], 4)
+# evolve_graph([[1, 2]], 4)
 
 
 
 # 3.5 Rules Depending on a Single Binary Relation
 # rule = "{{x, y}} -> {{x, z}, {y, z}, {z, z}}"
-# evolve_graph([{{1, 1}}, 5
+# evolve_graph([[1, 1]], 5)
 
 # rule = "{{x, y}} -> {{x, y}, {y, z}, {z, x}}"
-# evolve_graph([{{1, 2}}, 5
+# evolve_graph([[1, 2]], 5)
 
 # rule = "{{1, 2}} -> {{3, 4}, {4, 3}, {3, 1}, {3, 2}}"
-# evolve_graph([{{0, 0}}, 5
+# evolve_graph([[0, 0]], 5
 
 # rule = "{{1, 2}} -> {{2, 3}, {2, 3}, {3, 1}, {3, 1}}"
-# evolve_graph([{{0, 0}}, 5
+# evolve_graph([[0, 0]], 5
 
 
 
