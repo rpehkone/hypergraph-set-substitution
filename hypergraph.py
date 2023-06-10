@@ -24,25 +24,20 @@ def plot_graph(edges):
 		nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, edge_color='black', alpha=1)
 	plt.draw()
 
-def num_to_abc(relation):
-	#in order of appearance
-	num_to_letter = {}
-	counter = 0
-	converted_list = []
-	for sublist in relation:
-		converted_sublist = []
-		for number in sublist:
-			if number not in num_to_letter:
-				num_to_letter[number] = chr(ord('a') + counter)
-				counter += 1
-			converted_sublist.append(num_to_letter[number])
-		converted_list.append(converted_sublist)
-	return converted_list
-
 #relation: [[1, 2][1, 3]]
 def substitution_test(relation):
-	abclist = num_to_abc(relation)
-	return abclist == invars
+	flat = list(set(relation[0]))
+	#TODO: remove unique more generally
+	if invars[0][0] != invars[0][1]:
+		return True, relation[0]
+	# if var names same, value cant be same
+	if invars[0][0] == invars[0][1]:
+		if relation[0][0] == relation[0][1]:
+			return True, flat
+		else:
+			return False, []
+	print("undefined substitution")
+	exit(0)
 
 def _generate_relation_substitution():
 	code = "def relation_substition(a=0,b=0,c=0,d=0,e=0,f=0,g=0,h=0,i=0,j=0,k=0):\n"
@@ -68,8 +63,9 @@ def _generate_graph_substitution():
 	# TODO: generate nesting, "\t" * len(invars)
 	if (len(invars) == 1):
 		code +=\
-		"		if substitution_test([graph[i]]):\n" +\
-		"			result += relation_substition(*graph[i], max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
+		"		should_sub, flat = substitution_test([graph[i]])\n" +\
+		"		if should_sub:\n" +\
+		"			result += relation_substition(*flat, max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
 		"			max_val += " + str(new_amount) + "\n" +\
 		"		else:\n" +\
 		"			result += [graph[i]]\n"
@@ -191,10 +187,10 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # evolve_graph([[1, 2]], 4)
 
 # 2.3 A Slightly Different Rule
-rule = "{{x, y}} -> {{z, y}, {y, x}}"
-evolve_graph([[1, 2]], 5)
+# rule = "{{x, y}} -> {{z, y}, {y, x}}"
+# evolve_graph([[1, 2]], 5)
 
-# 2.4 Self-Loops
+# 2.4 Self-Loops (circle)
 # rule = "{{x, y}} -> {{y, z}, {z, x}}"
 # evolve_graph([[1, 1]], 6)
 
