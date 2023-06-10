@@ -20,18 +20,15 @@ def plot_graph(edges):
 		nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, edge_color='black', alpha=1)
 	plt.draw()
 
-def _generate_node_substitution_function(outvars, invars):
-	# code = f"""def substitute({', '.join(input_vars)}):
-	code = "def substitute(x, y, z, w):\n"
+def _generate_relation_substitution(outvars, invars):
+	code = "def relation_substition(a, b, c, d):\n"
 
 	if invars[0] == invars[1]:
-		code +=	"	if x != y:\n"+\
-				"		return [[x, y]]\n"
+		code +=	"	if a != b:\n"+\
+				"		return [[a, b]]\n"
 		for i, v in enumerate(outvars):
-			if v == "y":
-				outvars[i] = 'z'
-		# outvars[1] = chr(ord(outvars[1]) + 1)
-		# parse_rule("{{x, x}} -> {{z, z}, {z, z}, {x, z}}")
+			if v == "c":
+				outvars[i] = 'd'
 
 	code +=	"	return ["
 	i = 0
@@ -44,24 +41,37 @@ def _generate_node_substitution_function(outvars, invars):
 	print(code + "\n")
 	exec(code, globals())
 
-def _generate_graph_substitution_function():
-	code = "def apply_rule(graph):\n" +\
+def _generate_graph_substitution():
+	code = "def graph_substitution(graph):\n" +\
 	"	result = []\n" +\
 	"	max_value = max(max(p) for p in graph)\n" +\
 	"	for relation in graph:\n" +\
-	"		result += substitute(relation[0], relation[1], max_value + 1, max_value + 2)\n" +\
+	"		result += relation_substition(relation[0], relation[1], max_value + 1, max_value + 2)\n" +\
 	"		max_res = max(max(p) for p in result)\n" +\
 	"		max_value = max(max_res, max_value)\n" +\
 	"	return result"
-	print(code)
+	print(code + "\n")
 	exec(code, globals())
+
+def map_abc(rule):
+	replacement_chars = 'abcdefghijklmnopqrstuvwxyz'
+	mapping = {}
+	output = ""
+	index = 0
+	for char in rule:
+		if char.isalnum() and char not in mapping:
+			mapping[char] = replacement_chars[index]
+			index += 1
+		output += mapping.get(char, char)
+	print(output + "\n")
+	return output
 
 rule  = ""
 def parse_rule():
-	variables = re.findall(r"\b\w+\b", rule)
+	variables = re.findall(r"\b\w+\b", map_abc(rule))
 	input_vars, output_vars = variables[:2], variables[2:]
-	_generate_node_substitution_function(output_vars, input_vars)
-	_generate_graph_substitution_function()
+	_generate_relation_substitution(output_vars, input_vars)
+	_generate_graph_substitution()
 
 def evolve_graph(initial_graph, max_steps):
 	parse_rule()
@@ -83,7 +93,7 @@ def evolve_graph(initial_graph, max_steps):
 			graph = initial_graph
 			prev_solution = current_step
 			for _ in range(current_step):
-				graph = apply_rule(graph)
+				graph = graph_substitution(graph)
 			plt.clf()
 			plot_graph(graph)
 		plt.title(f"{rule}\nSteps: {current_step}")
