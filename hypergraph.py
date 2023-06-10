@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import time
 import re
 
+rule  = ""
+invars = ""
+outvars = ""
+
 def plot_graph(edges):
 	G = nx.Graph()
 	G.add_edges_from(edges)
@@ -20,44 +24,72 @@ def plot_graph(edges):
 		nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, edge_color='black', alpha=1)
 	plt.draw()
 
-def _generate_substitution_test(invars, outvars):
-	code = "def substitution_test(a, b, c, d):\n"
+def num_to_abc(relation):
+	#in order of appearance
+	num_to_letter = {}
+	counter = 0
+	converted_list = []
+	for sublist in relation:
+		converted_sublist = []
+		for number in sublist:
+			if number not in num_to_letter:
+				num_to_letter[number] = chr(ord('a') + counter)
+				counter += 1
+			converted_sublist.append(num_to_letter[number])
+		converted_list.append(converted_sublist)
+	return converted_list
 
-	if invars[0] == invars[1]:
-		code +=	"	return a == b\n"
-	else:
-		code +=	"	return a != b\n"
-	print(code)
+#relation: [[1, 2][1, 3]]
+def substitution_test(relation):
+	abclist = num_to_abc(relation)
+	return abclist == invars
+
+def _generate_relation_substitution():
+	code = "def relation_substition(a=0,b=0,c=0,d=0,e=0,f=0,g=0,h=0,i=0,j=0,k=0):\n"
+	code +=	"	return " + str(outvars).replace("'", "") + "\n"
+	print("\n" + code)
 	exec(code, globals())
 
-def _generate_relation_substitution(invars, outvars):
-	code = "def relation_substition(a, b, c, d):\n"
+def _count_unique(list2d):
+	unique_elements = set()
+	for sublist in list2d:
+		for elem in sublist:
+			unique_elements.add(elem)
+	return len(unique_elements)
 
-	code +=	"	return ["
-	i = 0
-	while i < len(outvars):
-			code += "[" + outvars[i] + ", " + outvars[i + 1] + "]"
-			i += 2
-			if i < len(outvars):
-				code += ", "
-	code += "]\n"
-	print(code)
-	exec(code, globals())
-
-def _generate_graph_substitution(invars, outvars):
-	code = "def graph_substitution(graph):\n" +\
+def _generate_graph_substitution():
+	new_amount = _count_unique(outvars) - _count_unique(invars)
+	code = \
+	"def graph_substitution(graph):\n" +\
 	"	result = []\n" +\
-	"	max_value = max(max(p) for p in graph)\n" +\
-	"	for relation in graph:\n" +\
-	"		if substitution_test(relation[0], relation[1], max_value + 1, max_value + 2):\n" +\
-	"			result += relation_substition(relation[0], relation[1], max_value + 1, max_value + 2)\n" +\
-	"			max_res = max(max(p) for p in result)\n" +\
-	"			max_value = max(max_res, max_value)\n" +\
+	"	max_val = max(max(p) for p in graph) + 1\n" +\
+	"	for i in range(len(graph)):\n"
+
+	# TODO: generate nesting, "\t" * len(invars)
+	if (len(invars) == 1):
+		code +=\
+		"		if substitution_test([graph[i]]):\n" +\
+		"			result += relation_substition(*graph[i], max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
+		"			max_val += " + str(new_amount) + "\n" +\
+		"		else:\n" +\
+		"			result += [graph[i]]\n"
+	else:
+		print("undefined input width")
+		exit(0)
+
+	# elif (len(invars) == 2):
+	# 	code +=\
+	# 	"		for j in range(i + 1, len(graph)):\n" +\
+	# 	"			flatted = graph[i] + graph[j]\n" +\
+	# 	"			result += substitute(max_value, *flatted)\n" +\
+	# 	"			max_value += " + str(new_amount) + "\n"
+
+	code +=\
 	"	return result\n"
 	print(code)
 	exec(code, globals())
 
-def map_abc(rule):
+def xyz_to_abc(rule):
 	replacement_chars = 'abcdefghijklmnopqrstuvwxyz'
 	mapping = {}
 	output = ""
@@ -67,16 +99,33 @@ def map_abc(rule):
 			mapping[char] = replacement_chars[index]
 			index += 1
 		output += mapping.get(char, char)
-	print(output + "\n")
+	print(output)
 	return output
 
-rule  = ""
+def parse_rule_arrays(string):
+	res = []
+	current_list = []
+	for char in string:
+		if char == '{':
+			current_list = []
+		elif char == '}':
+			if current_list:
+				res.append(current_list)
+				current_list = []
+		else:
+			if char != ',' and char != ' ':
+				current_list.append(char)
+	return res
+
 def parse_rule():
-	variables = re.findall(r"\b\w+\b", map_abc(rule))
-	invars, outvars = variables[:2], variables[2:]
-	_generate_substitution_test(invars, outvars)
-	_generate_relation_substitution(invars, outvars)
-	_generate_graph_substitution(invars, outvars)
+	global invars
+	global outvars
+	rules = xyz_to_abc(rule).split("->")
+	invars = parse_rule_arrays(rules[0])
+	outvars = parse_rule_arrays(rules[1])
+	print(str(invars) + " -> " + str(outvars))
+	_generate_relation_substitution()
+	_generate_graph_substitution()
 
 def evolve_graph(initial_graph, max_steps):
 	parse_rule()
@@ -142,8 +191,8 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # evolve_graph([[1, 2]], 4)
 
 # 2.3 A Slightly Different Rule
-# rule = "{{x, y}} -> {{z, y}, {y, x}}"
-# evolve_graph([[1, 2]], 5)
+rule = "{{x, y}} -> {{z, y}, {y, x}}"
+evolve_graph([[1, 2]], 5)
 
 # 2.4 Self-Loops
 # rule = "{{x, y}} -> {{y, z}, {z, x}}"
