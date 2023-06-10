@@ -106,7 +106,14 @@ def parse_rule_arrays(string):
 			current_list = []
 		elif char == '}':
 			if current_list:
-				res.append(current_list)
+				if len(current_list) == 2:
+					res.append(current_list)
+				elif len(current_list) == 3:
+					res.append([current_list[0], current_list[1]])
+					res.append([current_list[1], current_list[2]])
+				else:
+					print("undefined rule width")
+					exit(0)
 				current_list = []
 		else:
 			if char != ',' and char != ' ':
@@ -286,3 +293,6 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # initial = [[1]]
 # for i in range(10):
 # 	initial.append([i])
+
+if rule == "":
+	print("no rule defined")
