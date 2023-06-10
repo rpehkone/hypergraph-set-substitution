@@ -67,32 +67,36 @@ def _generate_graph_substitution():
 	"	max_val = max(max(p) for p in graph) + 1\n" +\
 	"	for i in range(len(graph)):\n"
 
-	# TODO: generate nesting, "\t" * len(invars)
-	if (len(invars) == 1):
-		code +=\
-		"		should_sub, flat = substitution_test([graph[i]])\n" +\
-		"		if should_sub:\n" +\
-		"			result += relation_substition(*flat, max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
-		"			max_val += " + str(new_amount) + "\n" +\
-		"		else:\n" +\
-		"			result += [graph[i]]\n"
-	elif (len(invars) == 2):
-		code +=\
-		"		for j in range(i + 1, len(graph)):\n" +\
-		"			should_sub, flat = substitution_test([graph[i], graph[j]])\n" +\
-		"			if should_sub:\n" +\
-		"				result += relation_substition(*flat, max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
-		"				max_val += " + str(new_amount) + "\n" +\
-		"			else:\n" +\
-		"				result += [graph[i], graph[j]]\n"
+	inlen = len(invars)
+	if inlen == 1:
+		code += \
+			"\t" * inlen + "	relation = [graph[i]]\n"
+	elif inlen == 2:
+		code += \
+			"		for j in range(i + 1, len(graph)):\n" +\
+			"\t" * inlen + "	relation = [graph[i], graph[j]]\n"
+	elif inlen == 3:
+		code += \
+			"		for j in range(i + 1, len(graph)):\n" +\
+			"			for k in range(j + 1, len(graph)):\n" +\
+			"\t" * inlen + "	relation = [graph[i], graph[j], graph[k]]\n"
+	elif inlen == 4:
+		code += \
+			"		for j in range(i + 1, len(graph)):\n" +\
+			"			for k in range(j + 1, len(graph)):\n" +\
+			"				for l in range(k + 1, len(graph)):\n" +\
+			"\t" * inlen + "	relation = [graph[i], graph[j], graph[k], graph[l]]\n"
 	else:
 		print("undefined invar width")
 		exit(0)
 
-	# 	code +=\
-	# 	"			flatted = graph[i] + graph[j]\n" +\
-	# 	"			result += substitute(max_value, *flatted)\n" +\
-	# 	"			max_value += " + str(new_amount) + "\n"
+	code +=\
+	"\t" * inlen + "	should_sub, flat = substitution_test(relation)\n" +\
+	"\t" * inlen + "	if should_sub:\n" +\
+	"\t" * inlen + "		result += relation_substition(*flat, max_val + 0, max_val + 1, max_val + 2, max_val + 3, max_val + 4)\n" +\
+	"\t" * inlen + "		max_val += " + str(new_amount) + "\n" +\
+	"\t" * inlen + "	else:\n" +\
+	"\t" * inlen + "		result += relation\n"
 
 	code +=\
 	"	return result\n"
