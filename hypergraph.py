@@ -24,26 +24,35 @@ def plot_graph(edges):
 		nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, edge_color='black', alpha=1)
 	plt.draw()
 
-def substitution_test_single(invar_this, relation):
-	if invar_this[0] != invar_this[1]:
-		return True, relation
-	if invar_this[0] == invar_this[1]:
-		if relation[0] == relation[1]:
-			flat = list(set(relation))
-			return True, flat
-		else:
-			return False, []
-	print("undefined substitution")
-	exit(0)
-
-#relation: [[1, 2][1, 3]]
 def substitution_test(relation):
-	res = []
-	for i, r in enumerate(relation):
-		should_sub, flat = substitution_test_single(invars[i], r)
-		if not should_sub:
+	variables = []
+	if len(relation) != len(invars):
+		return False, []
+	for i in range(len(relation)):
+		if len(relation[i]) != len(invars[i]):
 			return False, []
-		res += flat
+		for k in range(len(relation[i])):
+			variables.append([invars[i][k], relation[i][k]])
+
+	#find conflicts
+	element_dict = {}
+	for item in variables:
+		if item[0] in element_dict:
+			if element_dict[item[0]] != item[1]:
+				return False, []
+		else:
+			element_dict[item[0]] = item[1]
+
+	#sort and del duplicates
+	variables = [tuple(x) for x in variables]
+	variables = list(set(variables))
+	variables.sort(key=lambda x: x[0])
+	variables = [list(x) for x in variables]
+
+	flat = [item[1] for item in variables]
+	# print("flat")
+	# print(flat)
+	# exit(0)
 	return True, flat
 
 def _generate_relation_substitution():
@@ -187,7 +196,6 @@ def evolve_graph(initial_graph, max_steps):
 		plt.title(f"{rule}\nSteps: {current_step}")
 		plt.pause(0.1)
 
-
 # ui functions
 def on_window_close(event):
 	exit(0)
@@ -211,7 +219,6 @@ def on_key_press(event):
 	if current_step < 0:
 		current_step = 0
 plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
-
 
 
 # https://www.wolframphysics.org/technical-introduction/basic-form-of-models/
@@ -244,8 +251,6 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # rule = "{{x, y}} -> {{x, z}, {z, w}, {y, z}}"
 # evolve_graph([[1, 1]], 4)
 
-#TODO: ---------------------------------------------
-
 # 2.6 Ternary self-loop
 # rule = "{{x, y, z}} -> {{x, y, w}, {y, w, z}}"
 # evolve_graph([[1, 1, 1]], 4)
@@ -258,6 +263,7 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # rule = "{{x, y, z}, {u, x}} -> {{x, u, v}, {z, y}, {z, u}}"
 # evolve_graph([[0, 0, 0], [0, 0]], 6)
 
+#TODO: separate graphs in plot_graph()
 # 2.9 Connectedness
 # rule = "{{x, y}} -> {{x, x}, {z, x}}"
 # evolve_graph([[1, 2]], 4)
@@ -266,62 +272,41 @@ plt.gcf().canvas.mpl_connect("key_press_event", on_key_press)
 # rule = "{{x, y}} -> {{x, z}, {y, z}, {z, z}}"
 # evolve_graph([[1, 1]], 5)
 
+# 3.5.2 Triangle sprouts
 # rule = "{{x, y}} -> {{x, y}, {y, z}, {z, x}}"
 # evolve_graph([[1, 2]], 5)
 
+# 3.5.3 Nested form
 # rule = "{{1, 2}} -> {{3, 4}, {4, 3}, {3, 1}, {3, 2}}"
-# evolve_graph([[0, 0]], 5
+# evolve_graph([[0, 0]], 5)
 
+# 3.5.4 Simple structure
 # rule = "{{1, 2}} -> {{2, 3}, {2, 3}, {3, 1}, {3, 1}}"
-# evolve_graph([[0, 0]], 5
+# evolve_graph([[0, 0]], 5)
 
+# 3.6 Growing arms
+# rule = "{{1, 1, 2}} -> {{2, 2, 3}, {1, 2, 1}}, {{0, 0, 0}}"
+# evolve_graph([[1, 1, 1]], 5)
 
+# 3.6.2 Fibonacci tree
+# rule = "{{x, x, y}} -> {{y, y, y}, {x, y, z}}, {{0, 0, 0}}"
+# evolve_graph([[1, 1], [1, 2]], 5)
 
-# 3.6 Rules Depending on One Ternary Relation
-# rule = "{x, x, y} to {x, x}, {x, y}"
-# evolve_graph([[0, 0, 0]], 6)
-
-# rule = "{{x, x, y}} -> {{y, y, y}, {x, y, z}}"
-# evolve_graph([[0, 0, 0]], 6)
-
-# rule = "{{x, y, z}} -> {{x, u, v}, {z, v, w}, {y, w, u}}"
-# evolve_graph([[1, 2, 3]], 5)
-
-
-
-# 3.7 Rules Depending on More Than One Relation: The 22 -> 32 Case
+# 3.7
 # rule = "{{x, y}, {x, z}} -> {{x, w}, {y, w}, {z, w}}"
-# evolve_graph([[0, 0], [0, 0]], 30)
+# evolve_graph([[0, 1], [0, 2]], 5)
 
-
-
-# 3.8 Rules with Signature 22 -> 42
+# 3.8
 # rule = "{{x, y}, {x, z}} -> {{y, z}, {y, w}, {z, w}, {w, x}}"
-# evolve_graph([[0, 0], [0, 0]], 10)
+# evolve_graph([[0, 0], [0, 0]], 5)
 
+# 3.9
 # rule = "{{x, y}, {y, z}} -> {{x, y}, {y, x}, {w, x}, {w, z}}"
-# evolve_graph([[0, 0], [0, 0]], 10)
+# evolve_graph([[0, 0], [0, 0]], 5)
 
+# 3.10
 # rule = "{{x, y}, {y, z}} -> {{w, y}, {y, z}, {z, w}, {x, w}}"
-# evolve_graph([[0, 0], [0, 0]], 10)
-
-
-
-# 3.13 Multiple Transformation Rules
-# {{{x, x}} -> {{y, x}, {x, z}}, {{x, y}, {y, z}} -> {{x, x}}}, {{0, 0}}, 7
-
-# {{{1, 1}} -> {{2, 1}, {2, 1}, {3, 1}}, {{1, 2}, {3, 2}} -> {{2, 2}}}, {{1, 1}}, 20
-
-
-
-# 3.14 Rules Involving Disconnected Pieces
-# {{x, y}} -> {{y, z}, {y, z}}, {{0, 0}}, 5
-# {{x, y}} -> {{x, x}, {y, z}}, {{0, 0}}, 5
-
-#  {{x}, {y}} -> {{x, y}},
-# initial = [[1]]
-# for i in range(10):
-# 	initial.append([i])
+# evolve_graph([[0, 0], [0, 0]], 5)
 
 if rule == "":
 	print("no rule defined")
